@@ -44,7 +44,10 @@ class MovieHeader(box.FullBox):
             self.creation_time,
             get_utc_from_seconds_since_1904(self.modification_time).ctime(),
         )
-        yield ("timescale", self.timescale)
+        if self.timescale > 1000 and self.timescale % 1000 == 0:
+            yield ("timescale", self.timescale, f"{self.timescale//1000}ms")
+        else:
+            yield ("timescale", self.timescale)
         yield (
             "duration",
             self.duration,

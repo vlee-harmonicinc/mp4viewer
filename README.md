@@ -5,8 +5,8 @@
 
 # MP4Viewer
 
-MP4Viewer is an ISO base media file format viewer written in python.
-You can use it to view the metadata of an isobmff file on the console or a new window, or save it as a json file.
+MP4Viewer is an mp4 metadata analyser (ISO base media file format) written in python.
+You can use it to analyse the metadata of mp4 files on the shell, a new gtk based window, or save it as a json file.
 The definitions of structures used in the code can be found in the ~publicly available standard~ (it is not free to download anymore) [ISO/IEC 14496-12 - ISO base media file format](http://standards.iso.org/ittf/PubliclyAvailableStandards/index.html).
 
 ## Install using pip
