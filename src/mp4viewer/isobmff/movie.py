@@ -1,7 +1,7 @@
 """ Movie and track related boxes """
 
 # pylint: disable=too-many-instance-attributes
-from mp4viewer.tree import Attr
+from mp4viewer.tree import Tree, TreeType
 from . import box
 from .utils import get_utc_from_seconds_since_1904
 from .utils import parse_iso639_2_15bit
@@ -88,6 +88,13 @@ class TrackHeader(box.FullBox):
 
     def generate_fields(self):
         yield from super().generate_fields()
+        flags = {
+            "Track_enabled": self.flags & 1,
+            "Track_in_movie": (self.flags & 2) >> 1,
+            "Track_in_preview": (self.flags & 4) >> 2,
+            "Track_size_is_aspect_ratio": (self.flags & 8) >> 3,
+        }
+        yield ("flag values", flags)
         yield (
             "creation time",
             self.creation_time,
@@ -155,7 +162,9 @@ class EditList(box.FullBox):
                 str_duration = None
             else:
                 str_duration = stringify_duration(duration / mvhd.timescale)
-            dup["segment_duration"] = Attr("segment_duration", duration, str_duration)
+            dup["segment_duration"] = Tree(
+                TreeType.ATTR, "segment_duration", duration, str_duration
+            )
             entries.append(dup)
         yield ("entries", entries)
 
