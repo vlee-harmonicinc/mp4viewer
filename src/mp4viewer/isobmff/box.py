@@ -40,9 +40,7 @@ class Box:
                 self._skip_remaining_bytes(buf)
                 assert self.consumed_bytes == self.size, f"{self} size error"
             except BufferError:
-                error_print(
-                    f"\nInvalid data in box {self.boxtype} at {self.buffer_offset}"
-                )
+                error_print(f"\nInvalid data in box {self.boxtype} at {self.buffer_offset}")
                 remaining_bytes = self._remaining_bytes_to_skip(buf)
                 overflow = buf.current_position() + remaining_bytes - len(buf)
                 error_print(
@@ -179,9 +177,7 @@ class Box:
 
         descendant = ancestor.find_descendant(target_boxtype)
         if descendant is None:
-            error_print(
-                f"{self}: ancestor {ancestor} has no descendant of type {target_boxtype}"
-            )
+            error_print(f"{self}: ancestor {ancestor} has no descendant of type {target_boxtype}")
         return descendant
 
     def generate_fields(self):

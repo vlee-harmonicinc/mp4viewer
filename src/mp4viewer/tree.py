@@ -10,6 +10,7 @@ class TreeType(Enum):
     ATTR stands for a single attribute within an atom
     DICT represents a subobject within ATOM (a repeating object defined in a loop, for instance)
     """
+
     ATOM = 1
     ATTR = 2
     DICT = 3
@@ -51,16 +52,12 @@ class Tree:
         if len(args) == 1 and not isinstance(args[0], Tree):
             raise TypeError(f"Sole argument should be a Tree, received {type(args[0])}")
         if len(args) > 1 and not isinstance(args[0], str):
-            raise TypeError(
-                f"First parameter shall be a string, received {args[0]}(type{args[0]})"
-            )
+            raise TypeError(f"First parameter shall be a string, received {args[0]}(type{args[0]})")
 
         if len(args) == 1:
             child = args[0]
         else:
-            child = Tree(
-                TreeType.ATTR, args[0], args[1], args[2] if len(args) > 2 else None
-            )
+            child = Tree(TreeType.ATTR, args[0], args[1], args[2] if len(args) > 2 else None)
         self.children.append(child)
         return child
 

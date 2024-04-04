@@ -21,7 +21,7 @@ jobs:
         pip install pylint black flake8
     - name: Code formatting using black
       run: |
-        black --check .
+        black -l 100 --check .
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py')

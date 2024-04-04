@@ -69,9 +69,7 @@ class IsobmffParser:
         This is a work in progress.
         """
         if not self.debug:
-            error_print(
-                "Detected potential parse error; run with --debug to see more info"
-            )
+            error_print("Detected potential parse error; run with --debug to see more info")
             return
         print(
             "\nBuffer error detected; scanning through the file looking for boxes."
@@ -81,12 +79,7 @@ class IsobmffParser:
         known_boxtypes = set(list(self.boxmap) + list(box_names))
         while buf.remaining_bytes() >= 4:
             fourcc = buf.peekint(4)
-            if (
-                (fourcc & 0x80)
-                | (fourcc & 0x8000)
-                | (fourcc & 0x800000)
-                | (fourcc & 0x80000000)
-            ):
+            if (fourcc & 0x80) | (fourcc & 0x8000) | (fourcc & 0x800000) | (fourcc & 0x80000000):
                 buf.skipbytes(1)
                 continue
             fourcc = buf.peekstr(4)
@@ -95,9 +88,7 @@ class IsobmffParser:
                 sz = buf.readint32()
                 remaining_bytes = buf.remaining_bytes() - 4
                 if sz <= remaining_bytes:
-                    print(
-                        f"Possible box {fourcc} at {buf.current_position()} of size {sz}"
-                    )
+                    print(f"Possible box {fourcc} at {buf.current_position()} of size {sz}")
                 else:
                     delta = buf.current_position() + sz - len(buf.source)
                     print(

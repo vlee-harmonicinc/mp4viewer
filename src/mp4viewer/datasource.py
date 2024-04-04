@@ -133,8 +133,7 @@ class DataBuffer:
         if remaining_bytes < length:
             # pylint: disable=consider-using-f-string
             raise ValueError(
-                "Attempt to read beyond buffer %d %d %d"
-                % (self.read_ptr, self.buf_size, length)
+                "Attempt to read beyond buffer %d %d %d" % (self.read_ptr, self.buf_size, length)
             )
 
     def peekstr(self, length, offset=0):
@@ -142,9 +141,7 @@ class DataBuffer:
         self.checkbuffer(length + offset)
         if self.bit_position:
             raise AssertionError(f"Not aligned: {self.bit_position}")
-        return str(
-            self.data[self.read_ptr + offset : self.read_ptr + offset + length], "utf-8"
-        )
+        return str(self.data[self.read_ptr + offset : self.read_ptr + offset + length], "utf-8")
 
     def readstr(self, length):
         """read a string of `length` bytes and update the buffer pointer"""

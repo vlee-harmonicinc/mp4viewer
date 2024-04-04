@@ -314,9 +314,7 @@ class VisualSampleEntry(SampleEntry):
         buf.skipbytes(4)
         self.frame_count = buf.readint16()
         compressor_name_length = buf.readbyte()
-        self.compressor_name = (
-            buf.readstr(compressor_name_length) if compressor_name_length else ""
-        )
+        self.compressor_name = buf.readstr(compressor_name_length) if compressor_name_length else ""
         buf.skipbytes(32 - compressor_name_length - 1)
         self.depth = buf.readint16()
         buf.skipbytes(2)

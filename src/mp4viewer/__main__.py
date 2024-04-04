@@ -102,9 +102,7 @@ def main():
         help="Do not truncate long arrays",
         dest="truncate",
     )
-    parser.add_argument(
-        "--debug", action="store_true", help="Used for internal debugging"
-    )
+    parser.add_argument("--debug", action="store_true", help="Used for internal debugging")
     parser.add_argument(
         "--latex",
         action="store_true",

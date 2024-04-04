@@ -34,9 +34,7 @@ class ConsoleRenderer:
         self.indent_unit = self.indent_unit.replace(" ", "&nbsp;")
         self.header_prefix = "\\`" + self.header_prefix[1:]
         self.eol = "  \n"
-        self.indent_with_vert = (
-            self.indent_unit[: -len("&nbsp;")] + ConsoleRenderer.VERT
-        )
+        self.indent_with_vert = self.indent_unit[: -len("&nbsp;")] + ConsoleRenderer.VERT
         ConsoleRenderer.COLOR_HEADER = " ${\\textsf{\\color{red}"
         ConsoleRenderer.COLOR_ATTR = " ${\\textsf{\\color{blue}"
         ConsoleRenderer.COLOR_SUB_TEXT = " ${\\textsf{\\color{grey}"
@@ -74,9 +72,7 @@ class ConsoleRenderer:
         for i, child in enumerate(node.children):
             if child.is_attr():
                 attr = child
-                _write(
-                    f"{data_prefix}{self._wrap_color(attr.name, attr_color)}: {attr.value}"
-                )
+                _write(f"{data_prefix}{self._wrap_color(attr.name, attr_color)}: {attr.value}")
                 if attr.display_value is not None:
                     _write(f" {self._sub_text(attr.display_value)}{self.eol}")
                 else:

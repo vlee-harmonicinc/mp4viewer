@@ -46,9 +46,7 @@ class GtkRenderer:
             child.text = f": {raw_value}"
         else:
             child.text = f": {display_value}"
-            child = ET.SubElement(
-                root, "span", {"foreground": "#121212", "style": "italic"}
-            )
+            child = ET.SubElement(root, "span", {"foreground": "#121212", "style": "italic"})
             child.text = f" ({raw_value})"
 
         return ET.tostring(root).decode()
@@ -59,7 +57,9 @@ class GtkRenderer:
             parent,
             [
                 self.format_node(
-                    datanode.name, datanode.value if datanode.value else '', istitle=datanode.is_atom()
+                    datanode.name,
+                    datanode.value if datanode.value else "",
+                    istitle=datanode.is_atom(),
                 )
             ],
         )

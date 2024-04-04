@@ -27,9 +27,7 @@ def parse_iso639_2_15bit(value):
 
 def get_utc_from_seconds_since_1904(seconds):
     """Time in various boxes are represented as seconds since 1904"""
-    return datetime(1904, 1, 1) + timedelta(
-        days=seconds / 86400, seconds=seconds % 86400
-    )
+    return datetime(1904, 1, 1) + timedelta(days=seconds / 86400, seconds=seconds % 86400)
 
 
 def stringify_duration(total_seconds):
