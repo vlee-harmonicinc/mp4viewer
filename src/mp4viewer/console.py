@@ -58,31 +58,37 @@ class ConsoleRenderer:
         if node.is_atom():
             header_color = ConsoleRenderer.COLOR_HEADER if self.use_colors else ""
             attr_color = ConsoleRenderer.COLOR_ATTR if self.use_colors else ""
+            header_prefix = prefix + self.header_prefix if len(prefix) else ""
         else:
             header_color = ""
             attr_color = ""
-        header_prefix = prefix + self.header_prefix if len(prefix) else ""
+            header_prefix = prefix + self.indent_unit
         _write(
             f"{header_prefix}{self._wrap_color(node.name, header_color)}"
-            f" {self._sub_text(node.desc)}{self.eol}"
+            f" {self._sub_text(node.value) if node.value else ''}{self.eol}"
         )
-        if len(node.children):
+        if node.number_of_child_boxes():
             data_prefix = prefix + self.indent_with_vert + self.indent_unit
         else:
             data_prefix = prefix + self.indent_unit + self.indent_unit
-        for attr in node.attrs:
-            _write(
-                f"{data_prefix}{self._wrap_color(attr.name, attr_color)}: {attr.value}"
-            )
-            if attr.display_value is not None:
-                _write(f" {self._sub_text(attr.display_value)}{self.eol}")
-            else:
-                _write(self.eol)
-        child_indent = prefix + self.indent_with_vert
         for i, child in enumerate(node.children):
-            if i + 1 == len(node.children):
-                child_indent = prefix + self.indent_unit
-            self.show_node(child, child_indent)
+            if child.is_attr():
+                attr = child
+                _write(
+                    f"{data_prefix}{self._wrap_color(attr.name, attr_color)}: {attr.value}"
+                )
+                if attr.display_value is not None:
+                    _write(f" {self._sub_text(attr.display_value)}{self.eol}")
+                else:
+                    _write(self.eol)
+            else:
+                if child.is_atom():
+                    child_indent = prefix + self.indent_with_vert
+                    if i + 1 == len(node.children):
+                        child_indent = prefix + self.indent_unit
+                else:
+                    child_indent = prefix + self.indent_unit
+                self.show_node(child, child_indent)
 
     def render(self, tree: Tree):
         """Render the tree"""

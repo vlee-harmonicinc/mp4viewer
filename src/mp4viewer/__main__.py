@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 
-from mp4viewer.tree import Tree, Attr
+from mp4viewer.tree import Tree, TreeType
 from mp4viewer.datasource import FileSource, DataBuffer
 from mp4viewer.console import ConsoleRenderer
 from mp4viewer.json_renderer import JsonRenderer
@@ -13,22 +13,9 @@ from mp4viewer.isobmff.parser import IsobmffParser, getboxdesc
 from mp4viewer.isobmff.box import Box
 
 
-def add_kv_list(node, key, items):
-    """Add a list of dict objects as a subtree"""
-    for index, item in enumerate(items):
-        kv_node = node.add_child(
-            Tree(key, str(index + 1), tree_type=Tree.TREE_TYPE_DICT)
-        )
-        for k, v in item.items():
-            if isinstance(v, Attr):
-                kv_node.add_attr(v)
-            else:
-                kv_node.add_attr(k, v)
-
-
 def get_box_node(box, args):
     """Get a tree node representing the box"""
-    node = Tree(box.boxtype, getboxdesc(box.boxtype))
+    node = Tree(TreeType.ATOM, box.boxtype, getboxdesc(box.boxtype))
     for field in box.generate_fields():
         if isinstance(field, Box):
             add_box(node, field, args)
@@ -36,10 +23,16 @@ def get_box_node(box, args):
         if not isinstance(field, tuple):
             raise TypeError(f"Expected a tuple, got a {type(field)}")
         # generate fields yields a tuple of order (name, value, [formatted_value])
+        key = field[0]
         value = field[1]
         # Take care of lists of dicts
         if isinstance(value, list) and len(value) > 0 and isinstance(value[0], dict):
-            add_kv_list(node, field[0], value)
+            node.add_list_of_sub_objects(key, value)
+            continue
+
+        if isinstance(value, dict) and len(value) > 0:
+            kv_node = node.add_attr(Tree(TreeType.DICT, key))
+            kv_node.add_sub_object(value)
             continue
 
         if args.truncate and isinstance(value, list) and len(value) > 16:
@@ -64,7 +57,7 @@ def get_tree_from_file(path, args):
         # isobmff file parser
         parser = IsobmffParser(DataBuffer(FileSource(fd)), args.debug)
         boxes = parser.getboxlist()
-    root = Tree(os.path.basename(path), "File")
+    root = Tree(TreeType.ATOM, os.path.basename(path), "File")
     for box in boxes:
         add_box(root, box, args)
     return root

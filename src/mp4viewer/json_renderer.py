@@ -27,25 +27,50 @@ class JsonRenderer:
             self.add_node(child, root)
         self._write(root)
 
+    def _add_dict_node(self, node, parent):
+        dict_wrapper = {}
+        for item in node.children:
+            dict_wrapper[item.name] = item.value
+
+        if node.name not in parent:
+            # first entry; may be the only one, so no need for a list
+            parent[node.name] = dict_wrapper
+        else:
+            # has multiple entries by this name; change it to a list
+            if isinstance(parent[node.name], dict):
+                # second entry
+                temp = parent[node.name]
+                list_in_parent = [temp]
+                parent[node.name] = list_in_parent
+            else:
+                # third and subsequent entries
+                list_in_parent = parent[node.name]
+            list_in_parent.append(dict_wrapper)
+
     def add_node(self, node, parent):
         """recursively serialise box data"""
         j_node = {}
-        key_within_parent = "children"
         if node.is_atom():
-            j_node["boxtype"] = {"fourcc": node.name, "description": node.desc}
+            j_node["boxtype"] = {"fourcc": node.name, "description": node.value}
+            key_within_parent = "children"
         else:
             key_within_parent = node.name
         if key_within_parent not in parent:
             parent[key_within_parent] = []
         parent[key_within_parent].append(j_node)
-        for attr in node.attrs:
-            if attr.display_value is not None:
-                j_node[attr.name] = {
-                    "raw value": attr.value,
-                    "decoded": attr.display_value,
+        for child in node.children:
+            if child.is_atom():
+                self.add_node(child, j_node)
+                continue
+            if child.is_dict():
+                self._add_dict_node(child, j_node)
+                continue
+            # attr
+            if child.display_value is not None:
+                j_node[child.name] = {
+                    "raw value": child.value,
+                    "decoded": child.display_value,
                 }
             else:
-                j_node[attr.name] = attr.value
-        for child in node.children:
-            self.add_node(child, j_node)
+                j_node[child.name] = child.value
         return j_node

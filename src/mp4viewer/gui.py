@@ -59,14 +59,10 @@ class GtkRenderer:
             parent,
             [
                 self.format_node(
-                    datanode.name, datanode.desc, istitle=datanode.is_atom()
+                    datanode.name, datanode.value if datanode.value else '', istitle=datanode.is_atom()
                 )
             ],
         )
-        for attr in datanode.attrs:
-            self.treestore.append(
-                treenode, [self.format_node(attr.name, attr.value, attr.display_value)]
-            )
         for child in datanode.children:
             self.populate(child, treenode)
 
