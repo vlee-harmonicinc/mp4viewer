@@ -75,7 +75,7 @@ class Tree:
             kv_node = self.add_child(Tree(TreeType.DICT, key, str(index + 1)))
             kv_node.add_sub_object(item)
 
-    def add_child(self, child: Tree):
+    def add_child(self, child):
         """Add a child node to this tree"""
         if not isinstance(child, Tree):
             raise TypeError(f"add_child received {type(child)}")
