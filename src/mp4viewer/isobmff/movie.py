@@ -169,6 +169,35 @@ class EditList(box.FullBox):
         yield ("entries", entries)
 
 
+class ColourInformation(box.Box):
+    """colr"""
+
+    def parse(self, parse_ctx):
+        super().parse(parse_ctx)
+        buf = parse_ctx.buf
+        self.c_type_str = buf.peekstr(4)
+        self.colour_type = buf.readint32()
+        if self.c_type_str == "nclx":
+            self.colour_primaries = buf.readint16()
+            self.transfer_characteristics = buf.readint16()
+            self.matrix_coefficients = buf.readint16()
+            self.fullrange_flag = buf.peekbits(1)
+            buf.skipbytes(1)
+        else:
+            self._skip_remaining_bytes(buf)
+
+    def generate_fields(self):
+        yield from super().generate_fields()
+        yield ("colour type", self.colour_type, self.c_type_str)
+        if self.c_type_str == "nclx":
+            yield ("colour primaries", self.colour_primaries)
+            yield ("transfer characteristics", self.transfer_characteristics)
+            yield ("matrix coefficients", self.matrix_coefficients)
+            yield ("full range flag", self.fullrange_flag)
+        else:
+            yield (self.c_type_str, "ICC_profile (see ISO 15076‐1)")
+
+
 class MediaHeader(box.FullBox):
     """mdhd"""
 
@@ -665,6 +694,7 @@ boxmap = {
     "mvhd": MovieHeader,
     "tkhd": TrackHeader,
     "elst": EditList,
+    "colr": ColourInformation,
     "mdhd": MediaHeader,
     "vmhd": VideoMediaHeader,
     "smhd": SoundMediaHeader,
