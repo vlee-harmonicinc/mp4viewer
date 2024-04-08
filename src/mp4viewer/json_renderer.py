@@ -61,16 +61,18 @@ class JsonRenderer:
         for child in node.children:
             if child.is_atom():
                 self.add_node(child, j_node)
-                continue
-            if child.is_dict():
+            elif child.is_dict():
                 self._add_dict_node(child, j_node)
-                continue
-            # attr
-            if child.display_value is not None:
-                j_node[child.name] = {
-                    "raw value": child.value,
-                    "decoded": child.display_value,
-                }
+            elif child.is_list():
+                for item in child.children:
+                    self.add_node(item, j_node)
             else:
-                j_node[child.name] = child.value
+                # attr
+                if child.display_value is not None:
+                    j_node[child.name] = {
+                        "raw value": child.value,
+                        "decoded": child.display_value,
+                    }
+                else:
+                    j_node[child.name] = child.value
         return j_node

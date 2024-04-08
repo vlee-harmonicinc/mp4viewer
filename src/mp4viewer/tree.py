@@ -8,12 +8,14 @@ class TreeType(Enum):
     Types of trees.
     ATOM represents an iso 14996 atom.
     ATTR stands for a single attribute within an atom
-    DICT represents a subobject within ATOM (a repeating object defined in a loop, for instance)
+    DICT represents a subobject within ATOM
+    LIST is a list of DICT subobjects
     """
 
     ATOM = 1
     ATTR = 2
     DICT = 3
+    LIST = 4
 
 
 class Tree:
@@ -37,6 +39,10 @@ class Tree:
     def is_attr(self):
         """Return true if this node represents a single value within an iso box"""
         return self.type == TreeType.ATTR
+
+    def is_list(self):
+        """Return true if this node represents a list of sub objects within an iso box"""
+        return self.type == TreeType.LIST
 
     def add_attr(self, *args):
         """
@@ -71,8 +77,10 @@ class Tree:
 
     def add_list_of_sub_objects(self, key: str, object_list: list):
         """Add a list of dict objects as a subtree"""
+        wrapper = Tree(TreeType.LIST, key)
+        self.children.append(wrapper)
         for index, item in enumerate(object_list):
-            kv_node = self.add_child(Tree(TreeType.DICT, key, str(index + 1)))
+            kv_node = wrapper.add_child(Tree(TreeType.DICT, key, str(index + 1)))
             kv_node.add_sub_object(item)
 
     def add_child(self, child):

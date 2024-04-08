@@ -58,7 +58,7 @@ class GtkRenderer:
             [
                 self.format_node(
                     datanode.name,
-                    datanode.value if datanode.value else "",
+                    str(datanode.value) if datanode.value is not None else "",
                     istitle=datanode.is_atom(),
                 )
             ],

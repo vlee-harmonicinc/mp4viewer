@@ -14,9 +14,9 @@ class ConsoleRenderer:
 
     VERT = "!"
     HORI = "-"
-    COLOR_HEADER = "\033[31m"
-    COLOR_ATTR = "\033[36m"
-    COLOR_SUB_TEXT = "\033[38;5;243m"
+    COLOR_HEADER = "\033[31m"  # red
+    COLOR_ATTR = "\033[36m"  # cyan
+    COLOR_SUB_TEXT = "\033[38;5;243m"  # gray
     ENDCOL = "\033[0m"
 
     def __init__(self, offset=None, indent_unit="    ", latex_md_for_github=False):
@@ -51,39 +51,53 @@ class ConsoleRenderer:
             wrapped_text = f"<{text}>"
         return wrapped_text
 
+    def _get_attr_color(self):
+        return ConsoleRenderer.COLOR_ATTR if self.use_colors else ""
+
+    def _get_data_prefix(self, atom, prefix):
+        if atom.number_of_child_boxes():
+            data_prefix = prefix + self.indent_with_vert + self.indent_unit
+        else:
+            data_prefix = prefix + self.indent_unit + self.indent_unit
+        return data_prefix
+
+    def _show_attr_list(self, attr, prefix):
+        for child in attr.children:
+            self.show_node(child, prefix + self.indent_unit)
+
+    def _show_attr(self, atom, attr, prefix):
+        attr_color = self._get_attr_color()
+        data_prefix = self._get_data_prefix(atom, prefix)
+        _write(f"{data_prefix}{self._wrap_color(attr.name, attr_color)}: {attr.value}")
+        if attr.display_value is not None:
+            _write(f" {self._sub_text(attr.display_value)}{self.eol}")
+        else:
+            _write(self.eol)
+
     def show_node(self, node, prefix):
         """recursively display the node"""
         if node.is_atom():
             header_color = ConsoleRenderer.COLOR_HEADER if self.use_colors else ""
-            attr_color = ConsoleRenderer.COLOR_ATTR if self.use_colors else ""
             header_prefix = prefix + self.header_prefix if len(prefix) else ""
         else:
             header_color = ""
-            attr_color = ""
             header_prefix = prefix + self.indent_unit
         _write(
             f"{header_prefix}{self._wrap_color(node.name, header_color)}"
             f" {self._sub_text(node.value) if node.value else ''}{self.eol}"
         )
-        if node.number_of_child_boxes():
-            data_prefix = prefix + self.indent_with_vert + self.indent_unit
-        else:
-            data_prefix = prefix + self.indent_unit + self.indent_unit
         for i, child in enumerate(node.children):
             if child.is_attr():
-                attr = child
-                _write(f"{data_prefix}{self._wrap_color(attr.name, attr_color)}: {attr.value}")
-                if attr.display_value is not None:
-                    _write(f" {self._sub_text(attr.display_value)}{self.eol}")
-                else:
-                    _write(self.eol)
-            else:
-                if child.is_atom():
-                    child_indent = prefix + self.indent_with_vert
-                    if i + 1 == len(node.children):
-                        child_indent = prefix + self.indent_unit
-                else:
+                self._show_attr(node, child, prefix)
+            elif child.is_list():
+                self._show_attr_list(child, prefix)
+            elif child.is_atom():
+                child_indent = prefix + self.indent_with_vert
+                if i + 1 == len(node.children):
                     child_indent = prefix + self.indent_unit
+                self.show_node(child, child_indent)
+            else:
+                child_indent = prefix + self.indent_unit
                 self.show_node(child, child_indent)
 
     def render(self, tree: Tree):
