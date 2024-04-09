@@ -115,7 +115,7 @@ def main():
 
     renderer = None
     if args.output_format == "stdout":
-        renderer = ConsoleRenderer(latex_md_for_github=args.latex)
+        renderer = ConsoleRenderer(args)
         if args.color == "off":
             renderer.disable_colors()
         else:

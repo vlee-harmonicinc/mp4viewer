@@ -19,14 +19,15 @@ class ConsoleRenderer:
     COLOR_SUB_TEXT = "\033[38;5;243m"  # gray
     ENDCOL = "\033[0m"
 
-    def __init__(self, offset=None, indent_unit="    ", latex_md_for_github=False):
+    def __init__(self, args, offset=None, indent_unit="    "):
         self.offset = "" if offset is None else offset
         self.indent_unit = indent_unit
         self.header_prefix = "`" + indent_unit.replace(" ", ConsoleRenderer.HORI)[1:]
         self.use_colors = True
         self.eol = "\n"
         self.indent_with_vert = self.indent_unit[:-1] + ConsoleRenderer.VERT
-        if latex_md_for_github:
+        self.args = args
+        if args.latex:
             self._enable_latex_md_for_github()
 
     def _enable_latex_md_for_github(self):
@@ -61,9 +62,20 @@ class ConsoleRenderer:
             data_prefix = prefix + self.indent_unit + self.indent_unit
         return data_prefix
 
-    def _show_attr_list(self, attr, prefix):
-        for child in attr.children:
+    def _show_attr_list(self, atom, attr, prefix):
+        items = attr.children
+        truncated = self.args.truncate and len(items) > 10
+        if truncated:
+            items = items[:10]
+
+        for child in items:
             self.show_node(child, prefix + self.indent_unit)
+
+        if truncated:
+            data_prefix = self._get_data_prefix(atom, prefix)
+            msg = f"<<truncated {len(attr.children)-len(items)} items; rerun with -e to view them>>"
+            text = self._wrap_color(msg, self._get_attr_color())
+            _write(f"{data_prefix}{text}{self.eol}")
 
     def _show_attr(self, atom, attr, prefix):
         attr_color = self._get_attr_color()
@@ -90,7 +102,7 @@ class ConsoleRenderer:
             if child.is_attr():
                 self._show_attr(node, child, prefix)
             elif child.is_list():
-                self._show_attr_list(child, prefix)
+                self._show_attr_list(node, child, prefix)
             elif child.is_atom():
                 child_indent = prefix + self.indent_with_vert
                 if i + 1 == len(node.children):

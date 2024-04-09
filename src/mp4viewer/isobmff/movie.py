@@ -501,21 +501,14 @@ class SampleToChunkBox(box.FullBox):
             first = buf.readint32()
             samples_per_chunk = buf.readint32()
             sdix = buf.readint32()
-            self.entries.append((first, samples_per_chunk, sdix))
+            self.entries.append(
+                {"first": first, "samples_per_chunk": samples_per_chunk, "sdix": sdix}
+            )
 
     def generate_fields(self):
         yield from super().generate_fields()
         yield ("entry count", self.entry_count)
-        if self.entry_count > 10:
-            yield (
-                "chunk data hidden",
-                f"{self.entry_count} entries can be toggled in movies.py/SampleToChunkBox",
-            )
-        else:
-            for entry in self.entries:
-                yield ("first chunk", entry[0])
-                yield ("samples per chunk", entry[1])
-                yield ("sample description index", entry[2])
+        yield ("entries", self.entries)
 
 
 class ChunkOffsetBox(box.FullBox):
