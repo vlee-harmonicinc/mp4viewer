@@ -683,12 +683,35 @@ class AvcCBox(box.Box):
             yield ("sps ext byte count", self.sps_ext_len)
 
 
+class CompositionOffsetBox(box.FullBox):
+    """ctts"""
+
+    def parse(self, parse_ctx):
+        super().parse(parse_ctx)
+        buf = parse_ctx.buf
+        self.entry_count = buf.readint32()
+        self.entries = []
+        for _ in range(self.entry_count):
+            entry = {}
+            entry["sample_count"] = buf.readint32()
+            # pylint: disable=fixme
+            # TODO: handle signed based on self.version
+            entry["sample_offset"] = buf.readint32()
+            self.entries.append(entry)
+
+    def generate_fields(self):
+        yield from super().generate_fields()
+        yield ("entry count", self.entry_count)
+        yield ("entries", self.entries)
+
+
 boxmap = {
     "mvhd": MovieHeader,
     "tkhd": TrackHeader,
     "elst": EditList,
     "colr": ColourInformation,
     "mdhd": MediaHeader,
+    "ctts": CompositionOffsetBox,
     "vmhd": VideoMediaHeader,
     "smhd": SoundMediaHeader,
     "hmhd": HintMediaHeader,
