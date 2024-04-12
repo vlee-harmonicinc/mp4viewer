@@ -3,6 +3,7 @@
 # pylint: disable=too-many-instance-attributes
 from mp4viewer.tree import Tree, TreeType
 from . import box
+from . import descriptors
 from .utils import get_utc_from_seconds_since_1904
 from .utils import parse_iso639_2_15bit
 from .utils import stringify_duration
@@ -195,7 +196,7 @@ class ColourInformation(box.Box):
             yield ("matrix coefficients", self.matrix_coefficients)
             yield ("full range flag", self.fullrange_flag)
         else:
-            yield (self.c_type_str, "ICC_profile (see ISO 15076‐1)")
+            yield (self.c_type_str, "ICC_profile (see ISO 15076-1)")
 
 
 class MediaHeader(box.FullBox):
@@ -361,7 +362,10 @@ class VisualSampleEntry(SampleEntry):
 
 
 class AudioSampleEntry(SampleEntry):
-    """possibly mp4a (inside sample description when handler=soun)"""
+    """
+    boxtype depends on the audio coding. Usually mp4a for mp4 audio.
+    This box would be signalled within the sample description box when handler=soun.
+    """
 
     def parse(self, parse_ctx):
         buf = parse_ctx.buf
@@ -395,6 +399,26 @@ class AudioSampleEntry(SampleEntry):
         )
 
 
+class EsdsBox(box.FullBox):
+    """esds box that encapsulates ES_descriptor defined in 14496-1"""
+
+    def parse(self, parse_ctx):
+        super().parse(parse_ctx)
+        self.esd = descriptors.EsDescriptor(parse_ctx.buf)
+
+    def generate_fields(self):
+        yield from super().generate_fields()
+        yield ("ES descriptor", self.esd.serialise())
+
+
+class MP4AudioSampleEntry(AudioSampleEntry):
+    """mp4a"""
+
+    def parse(self, parse_ctx):
+        super().parse(parse_ctx)
+        self.children.append(EsdsBox(parse_ctx))
+
+
 class SampleDescription(box.FullBox):
     """stsd"""
 
@@ -407,7 +431,10 @@ class SampleDescription(box.FullBox):
         self.entry_count = buf.readint32()
         for _ in range(self.entry_count):
             if handler == "soun":
-                self.children.append(AudioSampleEntry(parse_ctx))
+                if buf.peekstr(4, 4) == "mp4a":
+                    self.children.append(MP4AudioSampleEntry(parse_ctx))
+                else:
+                    self.children.append(AudioSampleEntry(parse_ctx))
             elif handler == "vide":
                 self.children.append(VisualSampleEntry(parse_ctx))
             elif handler == "hint":

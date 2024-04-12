@@ -127,6 +127,8 @@ box_names = {
     "stbl": "Sample table",
     "hdlr": "Handler box",
     "stsd": "Sample description",
+    "mp4a": "MP4 audio sample entry",
+    "esds": "Elementary stream descriptor",
     "dref": "Data reference box",
     "url ": "Data entry URL box",
     "stts": "Time-to-sample box",

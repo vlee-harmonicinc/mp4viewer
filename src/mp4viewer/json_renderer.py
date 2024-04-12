@@ -76,8 +76,5 @@ class JsonRenderer:
 
     def _get_attr(self, attr):
         if attr.display_value is not None:
-            return {
-                    "raw value": attr.value,
-                    "decoded": attr.display_value
-                    }
+            return {"raw value": attr.value, "decoded": attr.display_value}
         return attr.value
