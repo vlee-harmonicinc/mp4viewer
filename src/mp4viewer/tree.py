@@ -72,6 +72,9 @@ class Tree:
         for key, value in kv_object.items():
             if isinstance(value, Tree):
                 self.children.append(value)
+            elif isinstance(value, dict):
+                kv_node = self.add_attr(Tree(TreeType.DICT, key))
+                kv_node.add_sub_object(value)
             else:
                 self.add_attr(key, value)
 

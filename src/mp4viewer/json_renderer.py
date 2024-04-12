@@ -30,7 +30,10 @@ class JsonRenderer:
     def _add_dict_node(self, node, parent):
         dict_wrapper = {}
         for item in node.children:
-            dict_wrapper[item.name] = item.value
+            if item.is_dict():
+                self._add_dict_node(item, dict_wrapper)
+            else:
+                dict_wrapper[item.name] = self._get_attr(item)
 
         if node.name not in parent:
             # first entry; may be the only one, so no need for a list
@@ -68,11 +71,13 @@ class JsonRenderer:
                     self.add_node(item, j_node)
             else:
                 # attr
-                if child.display_value is not None:
-                    j_node[child.name] = {
-                        "raw value": child.value,
-                        "decoded": child.display_value,
-                    }
-                else:
-                    j_node[child.name] = child.value
+                j_node[child.name] = self._get_attr(child)
         return j_node
+
+    def _get_attr(self, attr):
+        if attr.display_value is not None:
+            return {
+                    "raw value": attr.value,
+                    "decoded": attr.display_value
+                    }
+        return attr.value
