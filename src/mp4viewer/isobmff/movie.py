@@ -705,6 +705,47 @@ class CompositionOffsetBox(box.FullBox):
         yield ("entries", self.entries)
 
 
+class SampleDependencyTypeBox(box.FullBox):
+    """sdtp"""
+
+    def parse(self, parse_ctx):
+        super().parse(parse_ctx)
+        buf = parse_ctx.buf
+        sample_count = self._get_sample_count()
+        self.samples = []
+        for _ in range(sample_count):
+            entry = {}
+            entry["is_leading"] = buf.readbits(2)
+            entry["sample_depends_on"] = buf.readbits(2)
+            entry["sample_is_depended_on"] = buf.readbits(2)
+            entry["sample_has_redundancy"] = buf.readbits(2)
+            self.samples.append(entry)
+
+    def generate_fields(self):
+        yield from super().generate_fields()
+        yield ("samples", self.samples)
+
+    def _get_sample_count(self):
+        """
+        sample_count is signalled in SampleSizeBox or CompactSampleSizeBox.
+        Try to get it from one of those boxes, starting with the sample size box.
+        If neither are present, we can estimate it from the remaining bytes;
+        length of a single entry is one byte.
+        """
+        stsz = self.find_descendant_of_ancestor("stbl", "stsz")
+        if stsz is not None:
+            return stsz.sample_count
+        # try stz2
+        stz2 = self.find_descendant_of_ancestor("stbl", "stz2")
+        if stz2 is not None:
+            return stz2.sample_count
+        error_print(
+            f"Box {self} without a matching stsz or stz2. "
+            f"sample_count estimated as {self.remaining_bytes()}"
+        )
+        return self.remaining_bytes()
+
+
 boxmap = {
     "mvhd": MovieHeader,
     "tkhd": TrackHeader,
@@ -712,6 +753,7 @@ boxmap = {
     "colr": ColourInformation,
     "mdhd": MediaHeader,
     "ctts": CompositionOffsetBox,
+    "sdtp": SampleDependencyTypeBox,
     "vmhd": VideoMediaHeader,
     "smhd": SoundMediaHeader,
     "hmhd": HintMediaHeader,
