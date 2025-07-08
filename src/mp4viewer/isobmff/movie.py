@@ -666,15 +666,21 @@ class AvcCBox(box.Box):
 
         self.sps = []
         num_of_sps = buf.readbits(5)
+        self.consumed_bytes += 6
         for _ in range(num_of_sps):
             sps_len = buf.readint16()
+            self.consumed_bytes += 2
             self.sps.append(buf.readbytes(sps_len))
+            self.consumed_bytes += sps_len
 
         self.pps = []
         num_of_pps = buf.readbyte()
+        self.consumed_bytes += 1
         for _ in range(num_of_pps):
             pps_len = buf.readint16()
+            self.consumed_bytes += 2
             self.pps.append(buf.readbytes(pps_len))
+            self.consumed_bytes += pps_len
 
         if self.remaining_bytes() >= 4:
             buf.readbits(6)
@@ -685,6 +691,7 @@ class AvcCBox(box.Box):
             self.bit_depth_chroma_minus_8 = buf.readbits(3)
             self.sps_ext_len = buf.readbyte()
             buf.skipbytes(self.sps_ext_len)
+            self.consumed_bytes += 4
         else:
             self.chroma_format = -1
 
