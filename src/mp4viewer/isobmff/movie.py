@@ -710,6 +710,24 @@ class AvcCBox(box.Box):
             yield ("sps ext byte count", self.sps_ext_len)
 
 
+class PixelAspectRatioBox(box.Box):
+    """pasp"""
+
+    def parse(self, parse_ctx):
+        # ISO_IEC_14496-12
+        buf = parse_ctx.buf
+        super().parse(parse_ctx)
+        self.hSpacing = buf.readint32()
+        self.consumed_bytes += 4
+        self.vSpacing = buf.readint32()
+        self.consumed_bytes += 4
+
+    def generate_fields(self):
+        yield from super().generate_fields()
+        yield ("hSpacing", self.hSpacing)
+        yield ("vSpacing", self.vSpacing)
+
+
 class CompositionOffsetBox(box.FullBox):
     """ctts"""
 
@@ -798,4 +816,5 @@ boxmap = {
     "mehd": MovieExtendsHeader,
     "trex": TrackExtendsBox,
     "avcC": AvcCBox,
+    "pasp": PixelAspectRatioBox,
 }
