@@ -717,6 +717,78 @@ class AvcCBox(box.Box):
             yield ("sps ext byte count", self.sps_ext_len)
 
 
+class HvcCBox(box.Box):
+    """hvcC"""
+
+    def parse(self, parse_ctx):
+        buf = parse_ctx.buf
+        super().parse(parse_ctx)
+        self.configuration_version = buf.readbyte()
+        self.profile = buf.readbyte()
+        self.profile_compatibility = buf.readint32()
+        self.constraint_indicators_flags = buf.readbytes(6)
+        self.level_idc = buf.readbyte()
+        buf.readbits(4)  # reserved
+        self.min_spatial_segmentation_idc = buf.readbits(12)
+        buf.readbits(6)  # reserved
+        self.parallelism_type = buf.readbits(2)
+        buf.readbits(6)  # reserved
+        self.chroma_format = buf.readbits(2)
+        buf.readbits(5)  # reserved
+        self.bit_depth_luma_minus_8 = buf.readbits(3)
+        buf.readbits(5)  # reserved
+        self.bit_depth_chroma_minus_8 = buf.readbits(3)
+        self.avg_frame_rate = buf.readint16()
+        self.constant_frame_rate = buf.readbits(2)
+        self.num_temporal_layers = buf.readbits(3)
+        self.temporal_id_nested = buf.readbits(1)
+        self.length_size_minus_one = buf.readbits(2)
+        self.num_of_arrays = buf.readbyte()
+        self.consumed_bytes += 23
+        self.arrays = []
+        for _ in range(self.num_of_arrays):
+            array_completeness = buf.readbits(1)
+            buf.readbits(1)  # reserved
+            nal_unit_type = buf.readbits(6)
+            num_nalus = buf.readint16()
+            self.consumed_bytes += 3
+            nalus = []
+            for _ in range(num_nalus):
+                nal_unit_length = buf.readint16()
+                self.consumed_bytes += 2
+                nal_unit = buf.readbytes(nal_unit_length)
+                self.consumed_bytes += nal_unit_length
+                nalus.append({"nal_unit_length": nal_unit_length, "nal_unit": nal_unit})
+            self.arrays.append({"array_completeness": array_completeness, "nal_unit_type": nal_unit_type, "nalus": nalus})
+
+    def generate_fields(self):
+        yield from super().generate_fields()
+        yield ("Configuration version", self.configuration_version)
+        yield ("Profile", self.profile)
+        yield ("Profile compatibility", self.profile_compatibility)
+        flags_int = int.from_bytes(self.constraint_indicators_flags, "big")
+        yield ("Constraint indicators flags", f"0x{flags_int:012X}")
+        yield ("Level IDC", self.level_idc)
+        yield ("Min spatial segmentation IDC", self.min_spatial_segmentation_idc)
+        yield ("Parallelism type", self.parallelism_type)
+        yield ("Chroma format", self.chroma_format)
+        yield ("Bit depth luma minus 8", self.bit_depth_luma_minus_8)
+        yield ("Bit depth chroma minus 8", self.bit_depth_chroma_minus_8)
+        yield ("Average frame rate", self.avg_frame_rate)
+        yield ("Constant frame rate", self.constant_frame_rate)
+        yield ("Number of temporal layers", self.num_temporal_layers)
+        yield ("Temporal ID nested", self.temporal_id_nested)
+        yield ("Length size minus one", self.length_size_minus_one)
+        for array in self.arrays:
+            yield (
+                "Array",
+                {
+                    "array completeness": array["array_completeness"],
+                    "nal unit type": array["nal_unit_type"],
+                    "nalus": array["nalus"],
+                },
+            )
+
 class PixelAspectRatioBox(box.Box):
     """pasp"""
 
@@ -824,4 +896,5 @@ boxmap = {
     "trex": TrackExtendsBox,
     "avcC": AvcCBox,
     "pasp": PixelAspectRatioBox,
+    "hvcC": HvcCBox,
 }
